@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "flash_attention"
+version = "0.1.0"
+description = "LLM inference through flash attention: PyTorch, CUDA, Triton and MLIR legs sharing one test harness"
+requires-python = ">=3.10"
+dependencies = ["torch>=2.1", "numpy"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.4", "ruff"]
+cuda = ["ninja"]                 # JIT-builds csrc/ via torch.utils.cpp_extension.load
+triton = ["triton"]
+hf = ["transformers"]
+
+[tool.setuptools.packages.find]
+include = ["flash_attention*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"                  # -ra prints the reason for every xfail/skip -> progress board
+markers = [
+    "slow: long-running (GPT-2 download, large shapes); run with --runslow",
+    "cuda: needs a CUDA device + nvcc",
+    "triton: needs triton (Linux + CUDA)",
+    "mlir: needs mlir-opt / mlir-runner on PATH",
+    "hf: needs transformers",
+]
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+exclude = ["csrc", "mlir", ".ruff_cache"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E741"]                # l / m / d are the paper's names for logsumexp / max / head dim

@@ -1,0 +1,21 @@
+__pycache__/
+*.py[cod]
+.ruff_cache/
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+.venv/
+# torch.utils.cpp_extension JIT build dirs and nvcc/ptx dumps
+.torch_extensions/
+*.ptx
+*.cubin
+*.ll
+*.sass
+# benchmark outputs are regenerated; commit only curated CSVs under bench/results/
+bench/results/*.png
+bench/results/tmp_*
+# HF model cache if pointed here
+.hf_cache/
+CLAUDE.md
+ignore_folder
