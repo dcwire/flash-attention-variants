@@ -73,7 +73,7 @@ torch::Tensor gemm_nn_cuda(torch::Tensor a, torch::Tensor b) {
         N_BATCH
     );
 
-    GEMM_NN_kernel_batched<TILE_SIZE>(a.data_ptr<float>(), b.data_ptr<float>(), out.data_ptr<float>(), M, N, K);
+    GEMM_NN_kernel_batched<TILE_SIZE><<<blocks_per_grid, threads_per_block>>>(a.data_ptr<float>(), b.data_ptr<float>(), out.data_ptr<float>(), M, N, K);
 
     return out;
 
