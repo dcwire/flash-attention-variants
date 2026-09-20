@@ -78,6 +78,7 @@ def assert_close(actual, expected, dtype=None, **kw):
 
 # Shapes chosen to catch tiling bugs: sequence lengths that are not multiples of 32/64/128,
 # a single row, and one "real" size. (B, H, N, D)
+# batch, nheads, seq_len, hidden_dim
 SHAPES = [
     (1, 1, 1, 16),
     (1, 1, 8, 16),

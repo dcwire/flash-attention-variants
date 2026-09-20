@@ -35,11 +35,12 @@ def naive_attention(
     seq_len = q.size(-2)
     device = q.device
     if scale is None:
-        scale = 1 / torch.sqrt(torch.Tensor(q.shape[-1]))
-    S = (q @ k.transpose(-1, -2)) * scale
+        scale = 1 / torch.sqrt(torch.tensor(q.shape[-1]))
+    S = (torch.matmul(q, k.transpose(-1, -2))) * scale
 
     if causal:
-        msk = torch.triu(torch.ones(seq_len, seq_len, device=device, dtype=torch.bool, diagonal=1))
+        # Fix for decode
+        msk = torch.triu(torch.ones(seq_len, seq_len, device=device, dtype=torch.bool), diagonal=1)
         S = S.masked_fill(msk, value=float("-inf"))
 
     S = F.softmax(S, dim=-1)
