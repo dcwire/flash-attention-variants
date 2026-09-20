@@ -67,7 +67,19 @@ class NaiveMHSA(nn.Module):
 
     def forward(self, x: Tensor) -> Tensor:
         """x: (B, N, E) -> (B, N, E)."""
-        todo("NaiveMHSA.forward: project, split heads to (B,H,N,D), attend, merge, out_proj")
+        # todo("NaiveMHSA.forward: project, split heads to (B,H,N,D), attend, merge, out_proj")
+        x = self.in_proj(x)
+
+        q, k, v = torch.split(x, x.size(-1) // 3, dim=-1)
+
+        q = split_heads(q, self.num_heads)
+        k = split_heads(k, self.num_heads)
+        v = split_heads(v, self.num_heads)
+
+        scale = k.size(-1) ** -0.5
+
+
+        return self.out_proj(merge_heads(naive_attention(q, k, v, self.causal, scale)))
 
 
 def split_heads(x: Tensor, num_heads: int) -> Tensor:
