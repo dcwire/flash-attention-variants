@@ -7,7 +7,7 @@
 #include <stdexcept>
 
 template <int TILE_SIZE>
-__global__ GEMM_NT_kernel_batched(float *a_mat, float *b_mat, float *out_mat, int M, int N, int K) {
+__global__ void GEMM_NT_kernel_batched(float *a_mat, float *b_mat, float *out_mat, int M, int N, int K) {
     __shared__ float a_tile[TILE_SIZE][TILE_SIZE];
     __shared__ float b_tile[TILE_SIZE][TILE_SIZE];
 
@@ -47,8 +47,14 @@ __global__ GEMM_NT_kernel_batched(float *a_mat, float *b_mat, float *out_mat, in
 }
 
 
-void run_gemm_nt(const int TILE_SIZE, dim3 &blocks_per_grid, dim3 &threads_per_block, float *a_mat, float *b_mat, float *out_mat, int M, int N, int K) {
-    GEMM_NT_kernel_batched<TILE_SIZE><<<blocks_per_grid, threads_per_block>>>(a_mat, b_mat, out_mat, M, N, K);
+void run_gemm_nt(int tile_size, dim3 &blocks_per_grid, dim3 &threads_per_block, float *a_mat, float *b_mat, float *out_mat, int M, int N, int K) {
+
+    switch(tile_size) {
+        case 16: GEMM_NT_kernel_batched<16><<<blocks_per_grid, threads_per_block>>>(a_mat, b_mat, out_mat, M, N, K); break;
+        case 32: GEMM_NT_kernel_batched<32><<<blocks_per_grid, threads_per_block>>>(a_mat, b_mat, out_mat, M, N, K); break;
+        default: TORCH_CHECK(false, "unsupported tile size ", tile_size);
+    }
+
 }
 
 torch::Tensor gemm_nt_cuda(torch::Tensor a, torch::Tensor b) {
