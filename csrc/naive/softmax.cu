@@ -35,6 +35,7 @@ __global__ void SOFTMAX_kernel_batched(float *inp, float *outp, int NUM_ROW, int
         local_sum += expf(inp[base_addr + i] - local_max);
     }
 
+    __syncthreads();
     buffer[tid] = local_sum;
     for (int stride = blockDim.x / 2; stride >= 1; stride /= 2) {
         __syncthreads();
@@ -64,6 +65,7 @@ torch::Tensor softmax_cuda(torch::Tensor x) {
     // Assuming dim = -1 always
     x = x.contiguous();
     auto x_sizes = x.sizes();
+
     int N_BATCH = x_sizes[0];
     int N_ROW = x_sizes[1];
     int N_COL = x_sizes[2];
