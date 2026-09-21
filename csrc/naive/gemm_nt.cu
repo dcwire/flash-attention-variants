@@ -30,7 +30,7 @@ __global__ void GEMM_NT_kernel_batched(float *a_mat, float *b_mat, float *out_ma
         if ((t_y + r) < M && (t_k + c) < K) a_tile[r][c] = a_mat[a_base_addr + (t_y + r) * K + (t_k + c)];
         else a_tile[r][c] = 0.0f;
 
-        if ((t_x + r) < N && (t_k + c) < K) b_tile[r][c] = b_mat[b_base_addr + (t_x + r) * N + (t_k + c)];
+        if ((t_x + r) < N && (t_k + c) < K) b_tile[r][c] = b_mat[b_base_addr + (t_x + r) * K + (t_k + c)];
         else b_tile[r][c] = 0.0f;
         __syncthreads();
 
