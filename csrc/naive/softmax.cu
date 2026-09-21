@@ -53,7 +53,7 @@ __global__ void SOFTMAX_kernel_batched(float *inp, float *outp, int NUM_ROW, int
 
 void run_softmax(dim3 blocks_per_grid, dim3 threads_per_block, float *inp, float *outp, int NUM_ROW, int NUM_COL) {
     SOFTMAX_kernel_batched<<<blocks_per_grid, threads_per_block, threads_per_block.x * sizeof(float)>>>(
-        inp.data_ptr<float>(), outp.data_ptr<float>(), N_ROW, N_COL);
+        inp, outp, NUM_ROW, NUM_COL);
 }
 torch::Tensor softmax_cuda(torch::Tensor x) {
 

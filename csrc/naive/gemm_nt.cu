@@ -48,7 +48,7 @@ __global__ GEMM_NT_kernel_batched(float *a_mat, float *b_mat, float *out_mat, in
 
 
 void run_gemm_nt(const int TILE_SIZE, dim3 &blocks_per_grid, dim3 &threads_per_block, float *a_mat, float *b_mat, float *out_mat, int M, int N, int K) {
-    GEMM_NT_kernel_batched<TILE_SIZE><<<blocks_per_grid, threads_per_block>>>(a.data_ptr<float>(), b.data_ptr<float>(), out.data_ptr<float>(), M, N, K);
+    GEMM_NT_kernel_batched<TILE_SIZE><<<blocks_per_grid, threads_per_block>>>(a_mat, b_mat, out_mat, M, N, K);
 }
 
 torch::Tensor gemm_nt_cuda(torch::Tensor a, torch::Tensor b) {
