@@ -43,7 +43,7 @@ __global__ void SOFTMAX_kernel_batched(float *inp, float *outp, int NUM_ROW, int
 
     __syncthreads();
     local_sum = buffer[0];
-    for (int i = tid; i < NUM_COL; i++) {
+    for (int i = tid; i < NUM_COL; i += blockDim.x) {
         float x = expf(inp[base_addr + i] - local_max);
         outp[base_addr + i] = x / local_sum;
     }
