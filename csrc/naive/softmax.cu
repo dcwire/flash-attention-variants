@@ -62,7 +62,7 @@ torch::Tensor softmax_cuda(torch::Tensor x) {
     // then write e^(row_value) / total_sum into the output
 
     // Assuming dim = -1 always
-    x = x.contigous();
+    x = x.contiguous();
     auto x_sizes = x.sizes();
     int N_BATCH = x_sizes[0];
     int N_ROW = x_sizes[1];
@@ -73,7 +73,7 @@ torch::Tensor softmax_cuda(torch::Tensor x) {
     auto outp = torch::empty(x_sizes, x.options());
 
     SOFTMAX_kernel_batched<<<blocks_per_grid, threads_per_block, threads_per_block.x * sizeof(float)>>>(
-        inp.data_ptr<float>(), outp.data_ptr<float>(), N_ROW, N_COL);
+        x.data_ptr<float>(), outp.data_ptr<float>(), N_ROW, N_COL);
 
     return outp;
 }
