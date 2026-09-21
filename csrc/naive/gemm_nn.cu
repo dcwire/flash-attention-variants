@@ -6,6 +6,8 @@
 #include <cuda_runtime.h>
 #include <stdexcept>
 
+
+// TODO: Need to fix issue with float16/other precision formats
 template <int TILE_SIZE>
 __global__ void GEMM_NN_kernel_batched(float *a_mat, float *b_mat, float *out_mat, int M, int N, int K) {
 
@@ -55,6 +57,11 @@ __global__ void GEMM_NN_kernel_batched(float *a_mat, float *b_mat, float *out_ma
 
 
 }
+
+void run_gemm_nn(const int TILE_SIZE, dim3 blocks_per_grid, dim3 threads_per_block, float *a_mat, float *b_mat, float *out_mat, int M, int N, int K) {
+    GEMM_NN_kernel_batched<TILE_SIZE><<<blocks_per_grid, threads_per_block>>>(a.data_ptr<float>(), b.data_ptr<float>(), out.data_ptr<float>(), M, N, K);
+}
+
 torch::Tensor gemm_nn_cuda(torch::Tensor a, torch::Tensor b) {
     a = a.contiguous();
     b = b.contiguous();
