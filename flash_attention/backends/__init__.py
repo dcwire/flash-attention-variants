@@ -48,10 +48,11 @@ class Backend:
 def all_backends() -> list[Backend]:
     # Imported lazily so a broken optional leg (no triton, no nvcc) never breaks collection.
     # from flash_attention.backends import cuda, mlir, torch_flash, torch_naive, triton_fa
-    from flash_attention.backends import torch_naive
+    from flash_attention.backends import torch_naive, cuda
 
     return [
-        torch_naive.BACKEND
+        torch_naive.BACKEND,
+        cuda.NAIVE_BACKEND
     ]
     # return [
     #     torch_naive.BACKEND,

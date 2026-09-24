@@ -43,20 +43,20 @@ torch::Tensor naive_attention_cuda(torch::Tensor q, torch::Tensor k, torch::Tens
   // then get o_bh = s @ v (gemm_nn)
   // reshape o_bh and return
 
-  std::printf("Printing q shape: \n");
-  for (auto &s: q.sizes()) {
-      std::printf("%d ", s);
-  }
+  const int TILE_SIZE = 16;
 
-  std::printf("\n Printing k shape: \n");
-  for (auto &s: k.sizes()) {
-      std::printf("%d ", s);
-  }
+  int batch_size = q.size(0);
+  int seq_len = q.size(1);
+  int hidden_dim = q.size(2);
+  int head_dim = q.size(-1);
+  int num_heads = hidden_dim / head_dim;
 
-  std::printf("\n Printing v shape: \n");
-  for (auto &s: v.sizes()) {
-      std::printf("%d ", s);
-  }
+  auto q_bh = q.view({batch_size, seq_len, num_heads, head_dim}).permute({0, 2, 1, 3}).contiguous().view({batch_size * num_heads, seq_len, head_dim});
+  auto k_bh = k.view({batch_size, seq_len, num_heads, head_dim}).permute({0, 2, 1, 3}).contiguous().view({batch_size * num_heads, seq_len, head_dim});
+  auto v_bh = v.view({batch_size, seq_len, num_heads, head_dim}).permute({0, 2, 1, 3}).contiguous().view({batch_size * num_heads, seq_len, head_dim});
+
+
+
 
   throw std::runtime_error("NotYetImplemented: naive_attention_cuda");
 }
