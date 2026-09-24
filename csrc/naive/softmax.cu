@@ -66,9 +66,20 @@ torch::Tensor softmax_cuda(torch::Tensor x) {
     x = x.contiguous();
     auto x_sizes = x.sizes();
 
-    int N_BATCH = x_sizes[0];
-    int N_ROW = x_sizes[1];
-    int N_COL = x_sizes[2];
+
+    int N_BATCH;
+    int N_ROW;
+    int N_COL;
+
+    if (s_sizes.size() == 2) {
+        N_BATCH = 1;
+        N_ROW = x_sizes[0];
+        N_COL = x_sizes[1];
+    } else {
+        N_BATCH = x_sizes[0];
+        N_ROW = x_sizes[1];
+        N_COL = x_sizes[2];
+    }
 
     dim3 threads_per_block(256);
     dim3 blocks_per_grid(N_BATCH, N_ROW);
