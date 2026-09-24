@@ -58,7 +58,7 @@ __global__ void GEMM_NN_kernel_batched(float *a_mat, float *b_mat, float *out_ma
 
 }
 
-void run_gemm_nn(int tile_size, dim3 blocks_per_grid, dim3 threads_per_block, float *a_mat, float *b_mat, float *out_mat, int M, int N, int K) {
+void run_gemm_nn(int tile_size, dim3 &blocks_per_grid, dim3 &threads_per_block, float *a_mat, float *b_mat, float *out_mat, int M, int N, int K) {
     switch(tile_size) {
         case 16: GEMM_NN_kernel_batched<16><<<blocks_per_grid, threads_per_block>>>(a_mat, b_mat, out_mat, M, N, K); break;
         case 32: GEMM_NN_kernel_batched<32><<<blocks_per_grid, threads_per_block>>>(a_mat, b_mat, out_mat, M, N, K); break;
