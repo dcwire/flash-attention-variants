@@ -71,7 +71,7 @@ torch::Tensor softmax_cuda(torch::Tensor x) {
     int N_ROW;
     int N_COL;
 
-    if (s_sizes.size() == 2) {
+    if (x_sizes.size() == 2) {
         N_BATCH = 1;
         N_ROW = x_sizes[0];
         N_COL = x_sizes[1];
