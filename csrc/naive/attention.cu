@@ -3,14 +3,15 @@
 // baseline the fused kernel is measured against. Fold the scale and the mask into the softmax
 // kernel (or a tiny elementwise kernel) rather than a separate pass over S.
 #include <cstdio>
-#include <torch/extension.h>
+#include <cfloat>
+#include <ATen/ATen.h>  // not torch/extension.h: only bindings.cpp needs pybind
 #include <cuda_runtime.h>
 #include <stdexcept>
 
 // This generates 3 extra tensors which is not ideal
-// torch::Tensor gemm_nt_cuda(torch::Tensor a, torch::Tensor b);
-// torch::Tensor gemm_nn_cuda(torch::Tensor a, torch::Tensor b);
-// torch::Tensor softmax_cuda(torch::Tensor x);
+// at::Tensor gemm_nt_cuda(at::Tensor a, at::Tensor b);
+// at::Tensor gemm_nn_cuda(at::Tensor a, at::Tensor b);
+// at::Tensor softmax_cuda(at::Tensor x);
 
 void run_gemm_nt(const int TILE_SIZE, dim3 &blocks_per_grid, dim3 &threads_per_block, float *a_mat, float *b_mat, float *out_mat, int M, int N, int K);
 void run_gemm_nn(const int TILE_SIZE, dim3 &blocks_per_grid, dim3 &threads_per_block, float *a_mat, float *b_mat, float *out_mat, int M, int N, int K);
@@ -34,7 +35,7 @@ __global__ void scale_and_causal_mask_batched(float *mat, int rows, int cols, fl
     }
 }
 
-torch::Tensor naive_attention_cuda(torch::Tensor q, torch::Tensor k, torch::Tensor v,
+at::Tensor naive_attention_cuda(at::Tensor q, at::Tensor k, at::Tensor v,
                                    bool causal, double scale) {
 
   // Get qk (gemm_nt), apply scale and causal
@@ -56,9 +57,9 @@ torch::Tensor naive_attention_cuda(torch::Tensor q, torch::Tensor k, torch::Tens
   auto k_bh = k.contiguous().view({batch_size * num_heads, seq_len, head_dim});
   auto v_bh = v.contiguous().view({batch_size * num_heads, seq_len, head_dim});
 
-  auto qk = torch::empty({batch_size * num_heads, seq_len, seq_len}, options);
-  auto s = torch::empty_like(qk);
-  auto o_bh = torch::empty({batch_size * num_heads, seq_len, head_dim}, options);
+  auto qk = at::empty({batch_size * num_heads, seq_len, seq_len}, options);
+  auto s = at::empty_like(qk);
+  auto o_bh = at::empty({batch_size * num_heads, seq_len, head_dim}, options);
 
   dim3 thread_per_block(TILE_SIZE, TILE_SIZE);
   dim3 blocks_per_grid(

@@ -8,6 +8,8 @@ dist/
 .venv/
 # torch.utils.cpp_extension JIT build dirs and nvcc/ptx dumps
 .torch_extensions/
+# setup.py build_ext --inplace output
+flash_attention/_fa_cuda*.so
 *.ptx
 *.cubin
 *.ll

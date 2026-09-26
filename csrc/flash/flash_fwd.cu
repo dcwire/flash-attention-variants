@@ -10,13 +10,13 @@
 // epilogue: O /= l ; L = m + log(l) written as fp32 (B, H, N)
 //
 // Order of work: fp32 with plain FMAs and BLOCK 32 -> pass tests -> fp16 -> mma.sync -> tune.
-#include <torch/extension.h>
+#include <ATen/ATen.h>  // not torch/extension.h: only bindings.cpp needs pybind
 #include <cuda_runtime.h>
 #include <stdexcept>
 #include <tuple>
 
-std::tuple<torch::Tensor, torch::Tensor> flash_forward_cuda(torch::Tensor q, torch::Tensor k,
-                                                            torch::Tensor v, bool causal,
+std::tuple<at::Tensor, at::Tensor> flash_forward_cuda(at::Tensor q, at::Tensor k,
+                                                            at::Tensor v, bool causal,
                                                             double scale) {
   throw std::runtime_error("NotYetImplemented: flash_forward_cuda");
 }

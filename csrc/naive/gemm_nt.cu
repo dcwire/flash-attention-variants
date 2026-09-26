@@ -2,7 +2,7 @@
 // Used for S = Q K^T. Start with a 16x16 shared-memory tiled GEMM with bounds checks (N is not
 // a multiple of the tile in tests). The stretch goal swaps the inner product for mma.sync
 // (m16n8k16 fp16 fragments) - keep the tiling so only the inner loop changes.
-#include <torch/extension.h>
+#include <ATen/ATen.h>  // not torch/extension.h: only bindings.cpp needs pybind
 #include <cuda_runtime.h>
 #include <stdexcept>
 
@@ -57,7 +57,7 @@ void run_gemm_nt(int tile_size, dim3 &blocks_per_grid, dim3 &threads_per_block, 
 
 }
 
-torch::Tensor gemm_nt_cuda(torch::Tensor a, torch::Tensor b) {
+at::Tensor gemm_nt_cuda(at::Tensor a, at::Tensor b) {
 
     a = a.contiguous();
     b = b.contiguous();
@@ -67,7 +67,7 @@ torch::Tensor gemm_nt_cuda(torch::Tensor a, torch::Tensor b) {
     int N_BATCH = a_size[0];
     int M = a_size[1], N = b_size[1], K = a_size[2];
 
-    auto out = torch::empty({N_BATCH, M, N}, a.options());
+    auto out = at::empty({N_BATCH, M, N}, a.options());
     const int TILE_SIZE = 16;
     dim3 threads_per_block(TILE_SIZE, TILE_SIZE);
     dim3 blocks_per_grid(

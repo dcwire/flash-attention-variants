@@ -3,11 +3,11 @@
 // (O_s, m_s, l_s) in a scratch buffer, then a merge kernel (or the last block, via a counter)
 // combines the partials with the online-softmax merge rule and writes O.
 // Only the reduction structure differs from flash_fwd - no Q tiling, no causal mask.
-#include <torch/extension.h>
+#include <ATen/ATen.h>  // not torch/extension.h: only bindings.cpp needs pybind
 #include <cuda_runtime.h>
 #include <stdexcept>
 
-torch::Tensor flash_decode_cuda(torch::Tensor q, torch::Tensor k_cache, torch::Tensor v_cache,
+at::Tensor flash_decode_cuda(at::Tensor q, at::Tensor k_cache, at::Tensor v_cache,
                                 int64_t seq_len, int64_t num_splits) {
   throw std::runtime_error("NotYetImplemented: flash_decode_cuda");
 }

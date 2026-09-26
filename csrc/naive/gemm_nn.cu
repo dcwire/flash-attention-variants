@@ -2,7 +2,7 @@
 // Used for O = P V. Same tiling as gemm_nt; the difference is only how B tiles are loaded into
 // shared memory (row-major K x N slice instead of N x K), which is exactly the fragment layout
 // question you will hit again for the S.V product inside the fused kernel.
-#include <torch/extension.h>
+#include <ATen/ATen.h>  // not torch/extension.h: only bindings.cpp needs pybind
 #include <cuda_runtime.h>
 #include <stdexcept>
 
@@ -66,7 +66,7 @@ void run_gemm_nn(int tile_size, dim3 &blocks_per_grid, dim3 &threads_per_block, 
     }
 }
 
-torch::Tensor gemm_nn_cuda(torch::Tensor a, torch::Tensor b) {
+at::Tensor gemm_nn_cuda(at::Tensor a, at::Tensor b) {
     a = a.contiguous();
     b = b.contiguous();
 
@@ -75,7 +75,7 @@ torch::Tensor gemm_nn_cuda(torch::Tensor a, torch::Tensor b) {
     int N_BATCH = a_size[0];
     int M = a_size[1], N = b_size[2], K = a_size[2];
 
-    auto out = torch::empty({N_BATCH, M, N}, a.options());
+    auto out = at::empty({N_BATCH, M, N}, a.options());
     const int TILE_SIZE = 16;
     dim3 threads_per_block(TILE_SIZE, TILE_SIZE);
     dim3 blocks_per_grid(

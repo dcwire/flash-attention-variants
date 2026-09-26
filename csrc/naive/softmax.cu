@@ -2,7 +2,8 @@
 // Suggested design: one thread block per row, each thread strides over the row; two block
 // reductions (max, then sum of exp(x - max)); write exp(x - max) / sum. Accumulate in fp32 even
 // for fp16 input. Rows can be long (N up to 16k) so don't assume a row fits in one block's threads.
-#include <torch/extension.h>
+#include <cfloat>
+#include <ATen/ATen.h>  // not torch/extension.h: only bindings.cpp needs pybind
 #include <cuda_runtime.h>
 #include <stdexcept>
 
@@ -56,7 +57,7 @@ void run_softmax(dim3 &blocks_per_grid, dim3 &threads_per_block, float *inp, flo
     SOFTMAX_kernel_batched<<<blocks_per_grid, threads_per_block, threads_per_block.x * sizeof(float)>>>(
         inp, outp, NUM_ROW, NUM_COL);
 }
-torch::Tensor softmax_cuda(torch::Tensor x) {
+at::Tensor softmax_cuda(at::Tensor x) {
 
     // Idea is to do a reduce across a block which traverses a row
     // find the max in the row, then find total_sum(e^(row_value - max))
@@ -83,7 +84,7 @@ torch::Tensor softmax_cuda(torch::Tensor x) {
 
     dim3 threads_per_block(256);
     dim3 blocks_per_grid(N_BATCH, N_ROW);
-    auto outp = torch::empty(x_sizes, x.options());
+    auto outp = at::empty(x_sizes, x.options());
 
     SOFTMAX_kernel_batched<<<blocks_per_grid, threads_per_block, threads_per_block.x * sizeof(float)>>>(
         x.data_ptr<float>(), outp.data_ptr<float>(), N_ROW, N_COL);

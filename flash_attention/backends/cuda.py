@@ -1,9 +1,9 @@
-"""Tasks 2, 4, 5 - CUDA leg, loaded as a JIT-compiled torch extension.
+"""Tasks 2, 4, 5 - CUDA leg, built from csrc/ by setup.py into flash_attention/_fa_cuda*.so.
 
-``torch.utils.cpp_extension.load`` compiles csrc/ on first use into
-~/.cache/torch_extensions (override with TORCH_EXTENSIONS_DIR). No setup.py needed; a change to
-any .cu triggers a rebuild on the next import. Build output goes to stderr when
-FA_VERBOSE_BUILD=1.
+``ext()`` runs ``python setup.py build_ext --inplace`` itself when that .so is missing or older
+than any file in csrc/ (set FA_AUTO_BUILD=0 to turn this off). The build is incremental: ninja
+recompiles only the .cu files that changed. Build output is shown when FA_VERBOSE_BUILD=1.
+Set TORCH_CUDA_ARCH_LIST to your GPU's compute capability to avoid building extra archs.
 
 The extension also exports the *building-block* kernels (softmax, gemm_nt, gemm_nn) so
 tests/test_cuda_primitives.py can pin each one down before they are assembled.
@@ -14,6 +14,8 @@ from __future__ import annotations
 import functools
 import os
 import shutil
+import subprocess
+import sys
 from pathlib import Path
 
 import torch
@@ -21,17 +23,9 @@ import torch
 from flash_attention._todo import NotYetImplemented
 from flash_attention.backends import Backend
 
-CSRC = Path(__file__).resolve().parents[2] / "csrc"
-SOURCES = [
-    CSRC / "bindings.cpp",
-    CSRC / "naive" / "softmax.cu",
-    CSRC / "naive" / "gemm_nt.cu",
-    CSRC / "naive" / "gemm_nn.cu",
-    CSRC / "naive" / "attention.cu",
-    CSRC / "flash" / "flash_fwd.cu",
-    CSRC / "flash" / "flash_bwd.cu",
-    CSRC / "flash" / "flash_decode.cu",
-]
+ROOT = Path(__file__).resolve().parents[2]
+CSRC = ROOT / "csrc"
+PKG = ROOT / "flash_attention"
 
 
 def requirement() -> str | None:
@@ -42,17 +36,36 @@ def requirement() -> str | None:
     return None
 
 
+def _stale() -> bool:
+    built = list(PKG.glob("_fa_cuda*.so"))
+    if not built:
+        return True
+    so_mtime = max(p.stat().st_mtime for p in built)
+    inputs = [p for p in CSRC.rglob("*") if p.is_file()] + [ROOT / "setup.py"]
+    return any(p.stat().st_mtime > so_mtime for p in inputs)
+
+
+def build() -> None:
+    """Incremental build of csrc/ into flash_attention/ (same as `python setup.py build_ext -i`)."""
+    verbose = os.environ.get("FA_VERBOSE_BUILD") == "1"
+    proc = subprocess.run(
+        [sys.executable, "setup.py", "build_ext", "--inplace"],
+        cwd=ROOT,
+        stdout=None if verbose else subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+    )
+    if proc.returncode != 0:
+        raise RuntimeError(f"CUDA extension build failed:\n{proc.stdout or ''}")
+
+
 @functools.lru_cache(maxsize=1)
 def ext():
-    from torch.utils.cpp_extension import load
+    if os.environ.get("FA_AUTO_BUILD", "1") != "0" and _stale():
+        build()
+    from flash_attention import _fa_cuda
 
-    return load(
-        name="fa_cuda",
-        sources=[str(s) for s in SOURCES],
-        extra_cuda_cflags=["-O3", "-lineinfo", "--expt-relaxed-constexpr"],
-        extra_cflags=["-O3"],
-        verbose=os.environ.get("FA_VERBOSE_BUILD") == "1",
-    )
+    return _fa_cuda
 
 
 def _unwrap(call):
